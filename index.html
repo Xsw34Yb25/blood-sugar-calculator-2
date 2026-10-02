@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ব্লাড সুগার ও HbA1c কনভার্টার (v1.01)</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen py-8 px-4 flex items-center justify-center">
+
+    <div class="bg-white shadow-xl rounded-2xl w-full max-w-2xl p-6 md:p-8 space-y-6">
+        <div class="text-center space-y-1">
+            <div class="flex justify-between items-center mb-2">
+                <span class="text-xs bg-indigo-100 text-indigo-700 font-semibold px-2.5 py-0.5 rounded-full">v1.01</span>
+                <span class="text-xs text-gray-400">মেডিকেল ক্যালকুলেটর</span>
+            </div>
+            <h1 class="text-2xl md:text-3xl font-bold text-indigo-700">ব্লাড সুগার ও HbA1c কনভার্টার</h1>
+            <p class="text-gray-500 text-sm">ইউনিট রূপান্তর, eAG হিসাব এবং ডায়াবেটিস লেভেল পরীক্ষা করুন</p>
+            <p class="text-gray-700 font-medium text-xs md:text-sm pt-1">Developed by- Engr. Zahid Rahman.</p>
+            <p class="text-gray-700 font-medium text-xs md:text-sm">Bangladesh Railway.</p>
+        </div>
+
+        <!-- Grid Container for Sections -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            <!-- Box 1: HbA1c & eAG Conversion (3 input options) -->
+            <div class="bg-indigo-50/50 border border-indigo-100 rounded-xl p-5 space-y-4">
+                <h2 class="font-semibold text-indigo-900 text-lg border-b pb-2">HbA1c ও গড় সুগার (eAG)</h2>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">মান ইনপুট করুন:</label>
+                    <div class="flex gap-2">
+                        <input type="number" id="hba1c-val" step="0.1" placeholder="যেমন: 6.5 বা 150" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                        <select id="hba1c-type" class="px-2 py-2 text-sm border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                            <option value="hba1c">HbA1c (%)</option>
+                            <option value="eag_mgdl">eAG (mg/dL)</option>
+                            <option value="eag_mmol">eAG (mmol/L)</option>
+                        </select>
+                    </div>
+                </div>
+                <button onclick="convertHbA1c()" class="w-full bg-indigo-600 text-white text-sm font-semibold py-2 rounded-lg hover:bg-indigo-700 transition-colors shadow">হিসাব করুন</button>
+                <div id="res-hba1c" class="hidden text-xs bg-white p-3 rounded-lg border border-indigo-100 space-y-1.5 text-gray-700"></div>
+            </div>
+
+            <!-- Box 2: Blood Sugar Unit Conversion (mg/dL <-> mmol/L) -->
+            <div class="bg-indigo-50/50 border border-indigo-100 rounded-xl p-5 space-y-4">
+                <h2 class="font-semibold text-indigo-900 text-lg border-b pb-2">সুগার ইউনিট রূপান্তর</h2>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">ব্লাড সুগারের পরিমাণ:</label>
+                    <div class="flex gap-2">
+                        <input type="number" id="sugar-val" step="0.1" placeholder="যেমন: 126" oninput="syncToStatus()" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                        <select id="sugar-unit" onchange="syncToStatus()" class="px-2 py-2 text-sm border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                            <option value="mgdl">mg/dL</option>
+                            <option value="mmol">mmol/L</option>
+                        </select>
+                    </div>
+                </div>
+                <button onclick="convertSugarUnit()" class="w-full bg-indigo-600 text-white text-sm font-semibold py-2 rounded-lg hover:bg-indigo-700 transition-colors shadow">ইউনিট পরিবর্তন করুন</button>
+                <div id="res-sugar" class="hidden text-xs bg-white p-3 rounded-lg border border-indigo-100 space-y-1.5 text-gray-700"></div>
+            </div>
+
+        </div>
+
+        <!-- Box 3: Blood Sugar Status Checker (Auto-synced from Box 2) -->
+        <div class="bg-gray-50 border border-gray-200 rounded-xl p-5 space-y-4">
+            <h2 class="font-semibold text-gray-800 text-lg border-b pb-2">রক্তে শর্করার মাত্রা পরীক্ষা (Status Checker)</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">পরীক্ষার ধরন:</label>
+                    <select id="test-type" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                        <option value="fasting">খালি পেটে (Fasting)</option>
+                        <option value="pp">খাওয়ার ২ ঘণ্টা পর (PP)</option>
+                        <option value="random">র‌্যান্ডম (Random)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">মান ও ইউনিট (অটো-সিঙ্ক):</label>
+                    <div class="flex gap-2">
+                        <input type="number" id="test-val" step="0.1" placeholder="যেমন: 110" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                        <select id="test-unit" class="px-2 py-2 text-sm border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                            <option value="mgdl">mg/dL</option>
+                            <option value="mmol">mmol/L</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex items-end">
+                    <button onclick="checkStatus()" class="w-full bg-emerald-600 text-white text-sm font-semibold py-2 rounded-lg hover:bg-emerald-700 transition-colors shadow">লেভেল চেক করুন</button>
+                </div>
+            </div>
+            <div id="res-status" class="hidden text-xs bg-white p-3 rounded-lg border border-gray-200 text-gray-700"></div>
+        </div>
+
+        <!-- Medical Disclaimer -->
+        <div class="text-xs text-gray-400 text-center border-t pt-4">
+            * এই টুলটি শুধুমাত্র সাধারণ ধারণা ও শিক্ষার উদ্দেশ্যে। সঠিক চিকিৎসার জন্য অবশ্যই চিকিৎসকের পরামর্শ নিন।
+        </div>
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // Auto-sync function from Box 2 to Box 3
+        function syncToStatus() {
+            const val = document.getElementById('sugar-val').value;
+            const unit = document.getElementById('sugar-unit').value;
+            document.getElementById('test-val').value = val;
+            document.getElementById('test-unit').value = unit;
+        }
+
+        // HbA1c to eAG Conversion
+        function convertHbA1c() {
+            const val = parseFloat(document.getElementById('hba1c-val').value);
+            const type = document.getElementById('hba1c-type').value;
+            const resBox = document.getElementById('res-hba1c');
+
+            if (isNaN(val) || val <= 0) {
+                alert('দয়া করে সঠিক মান লিখুন।');
+                return;
+            }
+
+            resBox.classList.remove('hidden');
+            let hba1c, eagMgDl, eagMmolL;
+
+            if (type === 'hba1c') {
+                hba1c = val;
+                eagMgDl = (28.7 * hba1c) - 46.7;
+                eagMmolL = eagMgDl / 18;
+            } else if (type === 'eag_mgdl') {
+                eagMgDl = val;
+                hba1c = (eagMgDl + 46.7) / 28.7;
+                eagMmolL = eagMgDl / 18;
+            } else if (type === 'eag_mmol') {
+                eagMmolL = val;
+                eagMgDl = eagMmolL * 18;
+                hba1c = (eagMgDl + 46.7) / 28.7;
+            }
+
+            let status = "";
+            let color = "text-green-600";
+            if (hba1c < 5.7) {
+                status = "স্বাভাবিক (Normal)";
+            } else if (hba1c <= 6.4) {
+                status = "প্রি-ডায়াবেটিস (Pre-diabetes)";
+                color = "text-yellow-600";
+            } else {
+                status = "ডায়াবেটিস (Diabetes)";
+                color = "text-red-600";
+            }
+
+            resBox.innerHTML = `
+                <p>🔹 <strong>HbA1c:</strong> ${hba1c.toFixed(2)}%</p>
+                <p>🔹 <strong>eAG (mg/dL এককে):</strong> ${eagMgDl.toFixed(1)} mg/dL</p>
+                <p>🔹 <strong>eAG (mmol/L এককে):</strong> ${eagMmolL.toFixed(1)} mmol/L</p>
+                <p class="mt-1 font-semibold ${color}">অবস্থা: ${status}</p>
+            `;
+        }
+
+        // Blood Sugar Unit Conversion (mg/dL <-> mmol/L)
+        function convertSugarUnit() {
+            const val = parseFloat(document.getElementById('sugar-val').value);
+            const unit = document.getElementById('sugar-unit').value;
+            const resBox = document.getElementById('res-sugar');
+
+            if (isNaN(val) || val <= 0) {
+                alert('দয়া করে সঠিক মান লিখুন।');
+                return;
+            }
+
+            // Ensure sync also happens on button click
+            syncToStatus();
+
+            resBox.classList.remove('hidden');
+            let mgdl, mmol;
+
+            if (unit === 'mgdl') {
+                mgdl = val;
+                mmol = mgdl / 18;
+            } else {
+                mmol = val;
+                mgdl = mmol * 18;
+            }
+
+            resBox.innerHTML = `
+                <p>🔹 <strong>mg/dL:</strong> ${mgdl.toFixed(1)} mg/dL</p>
+                <p>🔹 <strong>mmol/L:</strong> ${mmol.toFixed(1)} mmol/L</p>
+            `;
+        }
+
+        // Blood Sugar Status Check with Dynamic Unit Support
+        function checkStatus() {
+            const type = document.getElementById('test-type').value;
+            const rawVal = parseFloat(document.getElementById('test-val').value);
+            const unit = document.getElementById('test-unit').value;
+            const resBox = document.getElementById('res-status');
+
+            if (isNaN(rawVal) || rawVal <= 0) {
+                alert('দয়া করে সুগারের সঠিক পরিমাণ লিখুন।');
+                return;
+            }
+
+            let valMgDl = rawVal;
+            let valMmol = rawVal;
+            if (unit === 'mmol') {
+                valMgDl = rawVal * 18;
+                valMmol = rawVal;
+            } else {
+                valMgDl = rawVal;
+                valMmol = rawVal / 18;
+            }
+
+            resBox.classList.remove('hidden');
+            let status = "";
+            let color = "text-green-600";
+
+            if (type === 'fasting') {
+                if (valMgDl < 100) {
+                    status = "স্বাভাবিক (Normal) - ১০০ mg/dL (< ৫.৬ mmol/L) এর নিচে";
+                } else if (valMgDl <= 125) {
+                    status = "প্রি-ডায়াবেটিস (Pre-diabetes) - ১০০ থেকে ১২৫ mg/dL (৫.৬ - ৬.৯ mmol/L)";
+                    color = "text-yellow-600";
+                } else {
+                    status = "ডায়াবেটিস (Diabetes) - ১২৬ mg/dL (৭.০ mmol/L) বা বেশি";
+                    color = "text-red-600";
+                }
+            } else if (type === 'pp') {
+                if (valMgDl < 140) {
+                    status = "স্বাভাবিক (Normal) - ১৪০ mg/dL (< ৭.৮ mmol/L) এর নিচে";
+                } else if (valMgDl <= 199) {
+                    status = "প্রি-ডায়াবেটিস (Pre-diabetes) - ১৪০ থেকে ১৯৯ mg/dL (৭.৮ - ১১.০ mmol/L)";
+                    color = "text-yellow-600";
+                } else {
+                    status = "ডায়াবেটিস (Diabetes) - ২০০ mg/dL (১১.১ mmol/L) বা বেশি";
+                    color = "text-red-600";
+                }
+            } else {
+                if (valMgDl >= 200) {
+                    status = "ডায়াবেটিস লক্ষণযুক্ত (Diabetes indicative) - ২০০ mg/dL (১১.১ mmol/L) বা বেশি";
+                    color = "text-red-600";
+                } else {
+                    status = "স্বাভাবিক বা কম ঝুঁকি (Normal / Low Risk)";
+                }
+            }
+
+            resBox.innerHTML = `
+                <p>🔹 <strong>ইনপুট মান:</strong> ${rawVal} ${unit === 'mgdl' ? 'mg/dL' : 'mmol/L'} (সমান: ${valMgDl.toFixed(1)} mg/dL / ${valMmol.toFixed(1)} mmol/L)</p>
+                <p class="mt-1 font-semibold ${color}">ফলাফল: ${status}</p>
+            `;
+        }
+    </script>
+</body>
+</html>
